@@ -11,7 +11,7 @@ class Pipe(Enum):
 
 
 class PreTrainedModel(Enum):
-    prompt2img = "CompVis/stable-diffusion-v1-4"
+    prompt2img = "CompVis/stable-diffusion-v2-1"
     img2img = "runwayml/stable-diffusion-v1-5"
     inpaint = "runwayml/stable-diffusion-inpainting"
     pix2pix = "timbrooks/instruct-pix2pix"
