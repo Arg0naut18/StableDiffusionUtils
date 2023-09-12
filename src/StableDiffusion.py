@@ -41,7 +41,7 @@ class StableDiffusion:
     def get_generator(self):
         return torch.Generator(device=self.device).manual_seed(self.seed)
     
-    def __call__(self, prompt, image=None, mask_image=None, strength=0.8, guidance_scale=7.5, num_steps=30):
-        images = self.pipe(prompt=prompt, image=image, mask_image=mask_image, strength=strength, guidance_scale=guidance_scale, num_inference_steps=num_steps).images
+    def __call__(self, prompt, **kwargs):
+        images = self.pipe(prompt=prompt, **kwargs).images
         if isinstance(prompt, list): return StableDiffusion.grid_img(imgs=images, rows=1, cols=len(prompt))
         return images
