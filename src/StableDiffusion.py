@@ -1,6 +1,8 @@
 from src.Setup import Pipe, PreTrainedModel
 from PIL import Image
 import torch
+import matplotlib.pyplot as plt
+import os
 
 
 class StableDiffusion:
@@ -36,6 +38,7 @@ class StableDiffusion:
         for i, img in enumerate(imgs):
             img = img.resize((w,h), Image.ANTIALIAS)
             grid.paste(img, box=(i%cols*w, i//cols*h))
+        plt.show(grid)
         return grid
     
     def get_generator(self):
@@ -45,3 +48,12 @@ class StableDiffusion:
         images = self.pipe(prompt=prompt, **kwargs).images
         if isinstance(prompt, list): return StableDiffusion.grid_img(imgs=images, rows=1, cols=len(prompt))
         return images
+    
+    def save(self, directory, images):
+        assert os.path.isdir(directory)
+        if isinstance(images, list):
+            for i, img in enumerate(images):
+                img.save(os.path.join(directory, os.sep, f"result_{i+1}.png"))
+        else:
+            from datetime import datetime
+            images.save(os.path.join(directory, os.sep, f"result_{datetime.now()}.png"))
