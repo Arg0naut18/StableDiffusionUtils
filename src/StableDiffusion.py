@@ -23,7 +23,8 @@ class StableDiffusion:
             self.scheduler_function = scheduler_function
             self.pipe.scheduler = self.scheduler_function.from_config(self.pipe.scheduler.config)
 
-    def grid_img(self, imgs, rows=1, cols=3, scale=1):
+    @staticmethod
+    def grid_img(imgs, rows=1, cols=3, scale=1):
         assert len(imgs) == rows * cols
 
         w, h = imgs[0].size
@@ -40,5 +41,7 @@ class StableDiffusion:
     def get_generator(self):
         return torch.Generator(device=self.device).manual_seed(self.seed)
     
-    def __call__(self, prompt, image=None, mask_image=None, strength=0.8, guidance_scale=7.5):
-        return self.pipe(prompt=prompt, image=image, mask_image=mask_image, strength=strength, guidance_scale=guidance_scale).images[0]
+    def __call__(self, prompt, image=None, mask_image=None, strength=0.8, guidance_scale=7.5, num_steps=30):
+        images = self.pipe(prompt=prompt, image=image, mask_image=mask_image, strength=strength, guidance_scale=guidance_scale, num_inference_steps=num_steps).images
+        if isinstance(prompt, list): return StableDiffusion.grid_img(imgs=images, rows=1, cols=len(prompt))
+        return images
