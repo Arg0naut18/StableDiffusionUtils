@@ -3,10 +3,12 @@ from PIL import Image
 import torch
 import matplotlib.pyplot as plt
 import os
+import numpy as np
+import cv2
 
 
 class StableDiffusion:
-    def __init__(self, device="cuda", pipe="prompt2img", seed=None, pretrained_model_registry_path=None, scheduler_function=None):
+    def __init__(self, device="cuda", pipe="prompt2img", seed=None, pretrained_model_registry_path=None, scheduler_function=None, is_control_net=False, control_net_model=None, **kwargs):
         assert pipe in Pipe
         self.device = device
         self.seed = seed
@@ -14,7 +16,11 @@ class StableDiffusion:
         if self.seed:
             self.generator = self.get_generator()
         self.pretrained_model_registry_path = PreTrainedModel[pipe.name].value if pretrained_model_registry_path is None else pretrained_model_registry_path
-        self.pipe = Pipe[pipe].value.from_pretrained(self.pretrained_model_registry_path, torch_dtype=torch.float16).to(self.device)
+        self.control_net_canny_model = None
+        if is_control_net:
+            self.pretrained_canny_model_registry_path = PreTrainedModel.controlnet_canny.value if not control_net_model else control_net_model
+            self.control_net_canny_model = Pipe.controlnetcannymodel.value.from_pretrained(self.pretrained_canny_model_registry_path, torch_dtype=torch.float16)
+        self.pipe = Pipe[pipe].value.from_pretrained(self.pretrained_model_registry_path, torch_dtype=torch.float16, controlnet=self.control_net_canny_model, **kwargs).to(self.device)
 
         # For optimized resource utilization
         self.pipe.enable_attention_slicing()
@@ -40,6 +46,15 @@ class StableDiffusion:
             grid.paste(img, box=(i%cols*w, i//cols*h))
         plt.show(grid)
         return grid
+    
+    @staticmethod
+    def canny_edge(img, low_threshold = 100, high_threshold = 200):
+        img = np.array(img)
+        img = cv2.Canny(img, low_threshold, high_threshold)
+        img = img[:, :, None]
+        img = np.concatenate([img, img, img], axis = 2)
+        canny_img = Image.fromarray(img)
+        return canny_img
     
     def get_generator(self):
         return torch.Generator(device=self.device).manual_seed(self.seed)
